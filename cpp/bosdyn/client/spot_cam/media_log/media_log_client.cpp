@@ -393,38 +393,39 @@ void MediaLogClient::OnRetrieveComplete(MessagePumpCallBase* call,
                                      std::vector<::bosdyn::api::spot_cam::RetrieveResponse>&& responses,
                                      const grpc::Status& status,
                                      std::promise<RetrieveResultType> promise) {
-    ::bosdyn::common::Status ret_status =
-        ProcessResponseAndGetFinalStatus<::bosdyn::api::spot_cam::RetrieveResponse>(
-            status, responses[0], SDKErrorCode::Success);
+    // ::bosdyn::common::Status ret_status =
+    //     ProcessResponseAndGetFinalStatus<::bosdyn::api::spot_cam::RetrieveResponse>(
+    //         status, responses[0], SDKErrorCode::Success);
 
-    promise.set_value({ret_status, std::move(responses[0])});
+    // promise.set_value({ret_status, std::move(responses[0])});
 
 // Must receive at least one chunk.
-    // if (responses.empty()) {
-    //     promise.set_value(
-    //         {::bosdyn::common::Status(SDKErrorCode::GenericSDKError,
-    //                                   "Empty vector of GetSystemLogResponse received"),
-    //          {}});
-    //     return;
-    // }
-    // // The final response containing all the data concatenated.
-    // std::string full_response;
-    // bosdyn::common::Status ret_status;
-    // // Validate each of the streamed responses individually and combine all the data.
-    // for (const auto& response : responses) {
-    //     ret_status =
-    //         ProcessResponseAndGetFinalStatus<::bosdyn::api::spot_cam::GetSystemLogResponse>(
-    //             status, response, SDKErrorCode::Success);
-    //     if (!ret_status) {
-    //         promise.set_value({ret_status, full_response});
-    //         return;
-    //     }
-    //     // Append the new chunk.
-    //     full_response += response.data().data();
-    // }
-    // // Return the concatenated response.
-    // promise.set_value({ret_status, std::move(full_response)});
-    // return;    
+    if (responses.empty()) {
+        promise.set_value(
+            {::bosdyn::common::Status(SDKErrorCode::GenericSDKError,
+                                      "Empty vector of GetSystemLogResponse received"),
+             {}});
+        return;
+    }
+    // The final response containing all the data concatenated.
+    ::bosdyn::api::spot_cam::RetrieveResponse full_response;
+    bosdyn::common::Status ret_status;
+    // Validate each of the streamed responses individually and combine all the data.
+    for (const auto& response : responses) {
+        ret_status =
+            ProcessResponseAndGetFinalStatus<::bosdyn::api::spot_cam::RetrieveResponse>(
+                status, response, SDKErrorCode::Success);
+        if (!ret_status) {
+            promise.set_value({ret_status, full_response});
+            return;
+        }
+        // Append the new chunk.
+        // full_response.data().data() = full_response.data().data()  + response.data().data();
+        full_response.mutable_data()->mutable_data()->append(response.data().data());
+    }
+    // Return the concatenated response.
+    promise.set_value({ret_status, std::move(full_response)});
+    return;    
 }
 
 
