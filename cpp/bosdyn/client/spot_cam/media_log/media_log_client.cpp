@@ -315,6 +315,115 @@ void MediaLogClient::SetComms(const std::shared_ptr<grpc::ChannelInterface>& cha
     m_stub.reset(new ::bosdyn::api::spot_cam::MediaLogService::Stub(channel));
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Log point to retrieve.  Only the name is used.
+std::shared_future<RetrieveResultType> MediaLogClient::RetrieveAsync(const std::string& tag,
+                                                               const RPCParameters& parameters) {
+    ::bosdyn::api::spot_cam::RetrieveRequest request;
+
+    request.mutable_point()->set_name(tag);
+
+    return RetrieveAsync(request, parameters);
+}
+
+// std::shared_future<RetrieveResultType> MediaLogClient::RetrieveAsync(const std::string& camera_name,
+//                                                                const RPCParameters& parameters) {
+//     ::bosdyn::api::spot_cam::RetrieveRequest request;
+
+//     request.mutable_camera()->set_name(camera_name);
+//     // request.set_type(::bosdyn::api::spot_cam::Logpoint::STILLIMAGE);
+
+//     return RetrieveAsync(request, parameters);
+// }
+
+RetrieveResultType MediaLogClient::Retrieve(const std::string& tag,
+                                      const RPCParameters& parameters) {
+    return RetrieveAsync(tag, parameters).get();
+}
+
+// RetrieveResultType MediaLogClient::Retrieve(const RPCParameters& parameters) {
+//     return RetrieveAsync(camera_name, parameters).get();
+// }
+
+std::shared_future<RetrieveResultType> MediaLogClient::RetrieveAsync(
+    ::bosdyn::api::spot_cam::RetrieveRequest& request, const RPCParameters& parameters) {
+    std::promise<RetrieveResultType> response;
+    std::shared_future<RetrieveResultType> future = response.get_future();
+    BOSDYN_ASSERT_PRECONDITION(m_stub != nullptr, "Stub for service is unset!");
+
+    MessagePumpCallBase* one_time = InitiateResponseStreamAsyncCall<::bosdyn::api::spot_cam::RetrieveRequest,
+                                                      ::bosdyn::api::spot_cam::RetrieveResponse,
+                                                      ::bosdyn::api::spot_cam::RetrieveResponse>(
+        request,
+        std::bind(&::bosdyn::api::spot_cam::MediaLogService::StubInterface::AsyncRetrieve, m_stub.get(), _1, _2, _3, _4),
+        std::bind(&MediaLogClient::OnRetrieveComplete, this, _1, _2, _3, _4, _5), std::move(response), parameters);
+
+    return future;
+}
+
+RetrieveResultType MediaLogClient::Retrieve(::bosdyn::api::spot_cam::RetrieveRequest& request,
+                                      const RPCParameters& parameters) {
+    return RetrieveAsync(request, parameters).get();
+}
+
+void MediaLogClient::OnRetrieveComplete(MessagePumpCallBase* call,
+                                     const ::bosdyn::api::spot_cam::RetrieveRequest& request,
+                                     std::vector<::bosdyn::api::spot_cam::RetrieveResponse>&& responses,
+                                     const grpc::Status& status,
+                                     std::promise<RetrieveResultType> promise) {
+    ::bosdyn::common::Status ret_status =
+        ProcessResponseAndGetFinalStatus<::bosdyn::api::spot_cam::RetrieveResponse>(
+            status, responses[0], SDKErrorCode::Success);
+
+    promise.set_value({ret_status, std::move(responses[0])});
+
+// Must receive at least one chunk.
+    // if (responses.empty()) {
+    //     promise.set_value(
+    //         {::bosdyn::common::Status(SDKErrorCode::GenericSDKError,
+    //                                   "Empty vector of GetSystemLogResponse received"),
+    //          {}});
+    //     return;
+    // }
+    // // The final response containing all the data concatenated.
+    // std::string full_response;
+    // bosdyn::common::Status ret_status;
+    // // Validate each of the streamed responses individually and combine all the data.
+    // for (const auto& response : responses) {
+    //     ret_status =
+    //         ProcessResponseAndGetFinalStatus<::bosdyn::api::spot_cam::GetSystemLogResponse>(
+    //             status, response, SDKErrorCode::Success);
+    //     if (!ret_status) {
+    //         promise.set_value({ret_status, full_response});
+    //         return;
+    //     }
+    //     // Append the new chunk.
+    //     full_response += response.data().data();
+    // }
+    // // Return the concatenated response.
+    // promise.set_value({ret_status, std::move(full_response)});
+    // return;    
+}
+
+
+
+
+
 }  // namespace spot_cam
 }  // namespace client
 

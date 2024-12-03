@@ -125,6 +125,15 @@ class MediaLogClient : public ServiceClient {
     // the directory.
     static std::string GetServiceType() { return s_service_type; }
 
+
+std::shared_future<RetrieveResultType> RetrieveAsync(const std::string& tag, const RPCParameters& parameters = RPCParameters());
+RetrieveResultType Retrieve(const std::string& tag, const RPCParameters& parameters = RPCParameters());
+
+std::shared_future<RetrieveResultType> RetrieveAsync( ::bosdyn::api::spot_cam::RetrieveRequest& request, const RPCParameters& parameters = RPCParameters());
+RetrieveResultType Retrieve(::bosdyn::api::spot_cam::RetrieveRequest& request, const RPCParameters& parameters = RPCParameters());
+
+
+
  private:
     // Callback function registered for the asynchronous grpc calls.
     void OnStoreComplete(MessagePumpCallBase* call,
@@ -152,6 +161,13 @@ class MediaLogClient : public ServiceClient {
                           const ::bosdyn::api::spot_cam::DeleteRequest& request,
                           ::bosdyn::api::spot_cam::DeleteResponse&& response,
                           const grpc::Status& status, std::promise<DeleteResultType> promise);
+
+
+    void OnRetrieveComplete(MessagePumpCallBase* call,
+                            const ::bosdyn::api::spot_cam::RetrieveRequest& request,
+                            std::vector<::bosdyn::api::spot_cam::RetrieveResponse>&& responses,
+                            const grpc::Status& status,
+                            std::promise<RetrieveResultType> promise);
 
 
     std::unique_ptr<::bosdyn::api::spot_cam::MediaLogService::StubInterface> m_stub;
