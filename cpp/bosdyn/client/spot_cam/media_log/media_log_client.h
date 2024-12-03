@@ -128,7 +128,7 @@ class MediaLogClient : public ServiceClient {
 
 std::shared_future<RetrieveResultType> RetrieveAsync(const std::string& tag, const RPCParameters& parameters = RPCParameters());
 RetrieveResultType Retrieve(const std::string& tag, const RPCParameters& parameters = RPCParameters());
-
+RetrieveResultType Retrieve(const ::bosdyn::api::spot_cam::Logpoint lp, const RPCParameters& parameters = RPCParameters());
 std::shared_future<RetrieveResultType> RetrieveAsync( ::bosdyn::api::spot_cam::RetrieveRequest& request, const RPCParameters& parameters = RPCParameters());
 RetrieveResultType Retrieve(::bosdyn::api::spot_cam::RetrieveRequest& request, const RPCParameters& parameters = RPCParameters());
 

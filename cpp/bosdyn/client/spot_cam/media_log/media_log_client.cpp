@@ -356,6 +356,13 @@ RetrieveResultType MediaLogClient::Retrieve(const std::string& tag,
     return RetrieveAsync(tag, parameters).get();
 }
 
+RetrieveResultType MediaLogClient::Retrieve(const ::bosdyn::api::spot_cam::Logpoint lp,
+                                      const RPCParameters& parameters) {
+    ::bosdyn::api::spot_cam::RetrieveRequest request;
+    request.mutable_point()->CopyFrom(lp);
+    return RetrieveAsync(request, parameters).get();
+}
+
 // RetrieveResultType MediaLogClient::Retrieve(const RPCParameters& parameters) {
 //     return RetrieveAsync(camera_name, parameters).get();
 // }
