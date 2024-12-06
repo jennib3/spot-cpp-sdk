@@ -410,6 +410,7 @@ void MediaLogClient::OnRetrieveComplete(MessagePumpCallBase* call,
     // The final response containing all the data concatenated.
     ::bosdyn::api::spot_cam::RetrieveResponse full_response;
     bosdyn::common::Status ret_status;
+    std::string data;
     // Validate each of the streamed responses individually and combine all the data.
     for (const auto& response : responses) {
         ret_status =
@@ -421,8 +422,12 @@ void MediaLogClient::OnRetrieveComplete(MessagePumpCallBase* call,
         }
         // Append the new chunk.
         // full_response.data().data() = full_response.data().data()  + response.data().data();
-        full_response.mutable_data()->mutable_data()->append(response.data().data());
+        // full_response.mutable_data()->mutable_data()->append(response.data().data());
+        data += response.data().data();        
     }
+    full_response.mutable_data()->set_total_size(data.size());
+    full_response.mutable_data()->set_data(data);
+
     // Return the concatenated response.
     promise.set_value({ret_status, std::move(full_response)});
     return;    
